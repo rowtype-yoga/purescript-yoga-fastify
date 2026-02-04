@@ -1,0 +1,12 @@
+{
+  "name": "purescript-yoga-fastify",
+  "version": "0.1.0",
+  "description": "PureScript FFI bindings for Fastify",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rowtype-yoga/purescript-yoga-backend-stack.git",
+    "directory": "packages/yoga-fastify"
+  },
+  "keywords": ["purescript", "ffi", "bindings", "yoga"]
+}
