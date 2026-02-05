@@ -1,0 +1,19 @@
+# Dependencies and build outputs
+node_modules/
+.spago/
+output/
+output-*/
+.psci_modules/
+.psc-ide-port
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+
+# Editor and backup files
+*.swp
+*.swo
+*~
+.vscode/
