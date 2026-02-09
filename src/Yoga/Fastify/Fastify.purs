@@ -10,10 +10,21 @@ module Yoga.Fastify.Fastify
   , HTTPMethod(..)
   , RouteURL(..)
   , StatusCode(..)
+  , AjvOptions(..)
+  , JsonSchema(..)
+  , RouteSchema(..)
+  , RouteConfig(..)
+  -- * Builders
+  , ajvOptions
+  , routeSchema
+  , routeConfig
   -- * Type Rows
   , ListenOptionsImpl
   , RouteOptionsImpl
   , FastifyOptionsImpl
+  , AjvCustomOptionsImpl
+  , RouteSchemaImpl
+  , RouteConfigImpl
   -- * Creation
   , fastify
   -- * Route Registration
@@ -48,11 +59,12 @@ import Data.Nullable (Nullable, toMaybe)
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Uncurried (EffectFn1, EffectFn2, EffectFn3, EffectFn4, runEffectFn1, runEffectFn2, runEffectFn3, runEffectFn4)
-import Foreign (Foreign)
+import Foreign (Foreign, unsafeToForeign)
 import Foreign.Object (Object)
 import Prim.Row (class Union)
 import Promise (Promise)
 import Promise.Aff as Promise
+import Unsafe.Coerce (unsafeCoerce)
 
 -- | Opaque Fastify instance
 foreign import data Fastify :: Type
@@ -96,6 +108,61 @@ derive instance Newtype StatusCode _
 derive newtype instance Show StatusCode
 
 --------------------------------------------------------------------------------
+-- Ajv Options
+--------------------------------------------------------------------------------
+
+type AjvCustomOptionsImpl =
+  ( removeAdditional :: Boolean
+  , allErrors :: Boolean
+  , coerceTypes :: Boolean
+  )
+
+newtype AjvOptions = AjvOptions Foreign
+
+derive instance Newtype AjvOptions _
+
+ajvOptions :: forall opts opts_. Union opts opts_ AjvCustomOptionsImpl => { | opts } -> AjvOptions
+ajvOptions opts = AjvOptions (unsafeToForeign { customOptions: opts })
+
+--------------------------------------------------------------------------------
+-- Route Schema
+--------------------------------------------------------------------------------
+
+newtype JsonSchema = JsonSchema Foreign
+
+derive instance Newtype JsonSchema _
+
+type RouteSchemaImpl =
+  ( body :: JsonSchema
+  , querystring :: JsonSchema
+  , params :: JsonSchema
+  , headers :: JsonSchema
+  , response :: Foreign
+  )
+
+newtype RouteSchema = RouteSchema Foreign
+
+derive instance Newtype RouteSchema _
+
+routeSchema :: forall opts opts_. Union opts opts_ RouteSchemaImpl => { | opts } -> RouteSchema
+routeSchema opts = RouteSchema (unsafeCoerce opts)
+
+--------------------------------------------------------------------------------
+-- Route Config
+--------------------------------------------------------------------------------
+
+type RouteConfigImpl =
+  ( rateLimit :: Foreign
+  )
+
+newtype RouteConfig = RouteConfig Foreign
+
+derive instance Newtype RouteConfig _
+
+routeConfig :: forall opts opts_. Union opts opts_ RouteConfigImpl => { | opts } -> RouteConfig
+routeConfig opts = RouteConfig (unsafeCoerce opts)
+
+--------------------------------------------------------------------------------
 -- Fastify Creation
 --------------------------------------------------------------------------------
 
@@ -104,6 +171,8 @@ type FastifyOptionsImpl =
   , disableRequestLogging :: Boolean
   , requestIdHeader :: String
   , requestIdLogLabel :: String
+  , bodyLimit :: Int
+  , ajv :: AjvOptions
   )
 
 type FastifyOptions = { | FastifyOptionsImpl }
@@ -121,6 +190,8 @@ fastify opts = runEffectFn1 fastifyImpl opts
 type RouteOptionsImpl =
   ( method :: HTTPMethod
   , url :: RouteURL
+  , schema :: RouteSchema
+  , config :: RouteConfig
   )
 
 type RouteOptions = { | RouteOptionsImpl }

@@ -8,14 +8,11 @@ export const fastifyImpl = (opts) => {
 // Register route
 export const routeImpl = (app, opts, affToPromise, handler) => {
   app.route({
-    method: opts.method,
-    url: opts.url,
+    ...opts,
     handler: async (request, reply) => {
-      // Call PureScript handler (returns Aff Unit)
       const affResult = handler(request)(reply);
-      // Convert Aff to Promise - fromAff returns Effect (Promise Unit), so call it!
       return affToPromise(affResult)();
-    }
+    },
   });
 };
 
