@@ -29,10 +29,10 @@ import Yoga.HTTP.API.Route.RenderMethod (class RenderMethod, renderMethod)
 import Yoga.JSON (writeJSON, write)
 
 handleRoute
-  :: forall method segments partialRequest o_ fullHeaders fullEncoding userResp respVariant
+  :: forall method segments partialRequest o_ fullHeaders fullCookies fullEncoding userResp respVariant
        pathParams queryParams body
-   . Row.Union partialRequest o_ (headers :: Record fullHeaders, body :: fullEncoding)
-  => DefaultRequestFields partialRequest fullHeaders fullEncoding
+   . Row.Union partialRequest o_ (headers :: Record fullHeaders, cookies :: Record fullCookies, body :: fullEncoding)
+  => DefaultRequestFields partialRequest fullHeaders fullCookies fullEncoding
   => RenderMethod method
   => PathPattern segments
   => SegmentPathParams segments pathParams
