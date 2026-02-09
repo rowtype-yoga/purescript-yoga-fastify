@@ -6,7 +6,7 @@
         "core": {
           "dependencies": [
             {
-              "aff": ">=8.0.0 <9.0.0"
+              "aff": ">=7.0.0 <9.0.0"
             },
             {
               "arrays": ">=7.3.0 <8.0.0"
@@ -60,7 +60,7 @@
               "variant": ">=8.0.0 <9.0.0"
             },
             {
-              "yoga-http-api": ">=0.1.3 <0.2.0"
+              "yoga-http-api": ">=0.1.4 <0.2.0"
             },
             {
               "yoga-json": ">=5.1.0 <6.0.0"
@@ -668,7 +668,7 @@
       }
     },
     "extra_packages": {
-      "yoga-http-api": "0.1.3",
+      "yoga-http-api": "0.1.4",
       "yoga-options": "0.1.0"
     }
   },
@@ -1548,8 +1548,8 @@
     },
     "yoga-http-api": {
       "type": "registry",
-      "version": "0.1.3",
-      "integrity": "sha256-cIGFSCoUdqBOmA87DajzV2bkx+cDA6iD/q7lCeEqcD8=",
+      "version": "0.1.4",
+      "integrity": "sha256-kFnDMt0KGsi+84RKgmLQEr9HB+XHOgCeLMsFatCeCiY=",
       "dependencies": [
         "aff",
         "arrays",
