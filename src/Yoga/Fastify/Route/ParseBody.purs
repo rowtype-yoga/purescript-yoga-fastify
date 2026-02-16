@@ -28,3 +28,8 @@ instance ReadForeign a => ParseBody (FormData a) a where
   parseBody _ bodyMaybe = case bodyMaybe of
     Nothing -> Left "Request body is required"
     Just foreignBody -> lmap show (read foreignBody)
+
+instance ReadForeign (Record row) => ParseBody (Record row) (Record row) where
+  parseBody _ bodyMaybe = case bodyMaybe of
+    Nothing -> Left "Request body is required"
+    Just foreignBody -> lmap show (read foreignBody)

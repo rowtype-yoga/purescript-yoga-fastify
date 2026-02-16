@@ -8,7 +8,7 @@ workspace:
 package:
   name: yoga-fastify
   publish:
-    version: 0.2.3
+    version: 0.3.0
     license: MIT
     location:
       githubOwner: rowtype-yoga
