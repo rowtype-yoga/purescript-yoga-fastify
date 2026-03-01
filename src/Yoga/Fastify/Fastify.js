@@ -39,3 +39,27 @@ export const statusImpl = (reply, code) => reply.status(code);
 export const headerImpl = (reply, key, value) => reply.header(key, value);
 export const sendImpl = (reply, payload) => reply.send(payload);
 export const sendJsonImpl = (reply, payload) => reply.send(payload); // Fastify auto-serializes
+
+// Raw Node access
+export const rawRequestImpl = (request) => request.raw;
+export const rawReplyImpl = (reply) => reply.raw;
+export const rawRouteImpl = (app, methods, handler) => {
+  app.route({
+    method: methods,
+    url: "/*",
+    handler: (req, reply) => {
+      handler(req.raw)(reply.raw)();
+      reply.hijack();
+    },
+  });
+};
+
+export const rawServerImpl = (app) => app.server;
+
+export const onUpgradeImpl = (server, handler) => {
+  server.on("upgrade", (req, socket, head) => {
+    handler(req)(socket)(head)();
+  });
+};
+
+export const httpRequestUrlImpl = (req) => req.url;

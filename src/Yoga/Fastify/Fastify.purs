@@ -4,6 +4,12 @@ module Yoga.Fastify.Fastify
   , FastifyRequest
   , FastifyReply
   , RouteHandler
+  -- * Raw Node types
+  , HttpServer
+  , HttpRequest
+  , HttpResponse
+  , NetSocket
+  , Buffer
   -- * Newtypes
   , Host(..)
   , Port(..)
@@ -49,6 +55,13 @@ module Yoga.Fastify.Fastify
   , header
   , send
   , sendJson
+  -- * Raw Node access
+  , rawRequest
+  , rawReply
+  , rawRoute
+  , rawServer
+  , onUpgrade
+  , httpRequestUrl
   ) where
 
 import Prelude
@@ -318,3 +331,47 @@ foreign import sendJsonImpl :: EffectFn2 FastifyReply Foreign (Promise Unit)
 
 sendJson :: Foreign -> FastifyReply -> Aff Unit
 sendJson payload reply = runEffectFn2 sendJsonImpl reply payload # Promise.toAffE
+
+--------------------------------------------------------------------------------
+-- Raw Node types
+--------------------------------------------------------------------------------
+
+foreign import data HttpServer :: Type
+foreign import data HttpRequest :: Type
+foreign import data HttpResponse :: Type
+foreign import data NetSocket :: Type
+foreign import data Buffer :: Type
+
+--------------------------------------------------------------------------------
+-- Raw Node access
+--------------------------------------------------------------------------------
+
+foreign import rawRequestImpl :: EffectFn1 FastifyRequest HttpRequest
+
+rawRequest :: FastifyRequest -> Effect HttpRequest
+rawRequest = runEffectFn1 rawRequestImpl
+
+foreign import rawReplyImpl :: EffectFn1 FastifyReply HttpResponse
+
+rawReply :: FastifyReply -> Effect HttpResponse
+rawReply = runEffectFn1 rawReplyImpl
+
+foreign import rawRouteImpl :: EffectFn3 Fastify (Array String) (HttpRequest -> HttpResponse -> Effect Unit) Unit
+
+rawRoute :: Array String -> (HttpRequest -> HttpResponse -> Effect Unit) -> Fastify -> Effect Unit
+rawRoute methods handler app = runEffectFn3 rawRouteImpl app methods handler
+
+foreign import rawServerImpl :: EffectFn1 Fastify HttpServer
+
+rawServer :: Fastify -> Effect HttpServer
+rawServer = runEffectFn1 rawServerImpl
+
+foreign import onUpgradeImpl :: EffectFn2 HttpServer (HttpRequest -> NetSocket -> Buffer -> Effect Unit) Unit
+
+onUpgrade :: HttpServer -> (HttpRequest -> NetSocket -> Buffer -> Effect Unit) -> Effect Unit
+onUpgrade server handler = runEffectFn2 onUpgradeImpl server handler
+
+foreign import httpRequestUrlImpl :: EffectFn1 HttpRequest String
+
+httpRequestUrl :: HttpRequest -> Effect String
+httpRequestUrl = runEffectFn1 httpRequestUrlImpl
