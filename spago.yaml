@@ -2,8 +2,7 @@ workspace:
   packageSet:
     registry: 73.0.0
   extraPackages:
-    yoga-http-api:
-      path: ../purescript-yoga-http-api
+    yoga-http-api: "0.3.0"
     yoga-options: "0.1.0"
 
 package:
