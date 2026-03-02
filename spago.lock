@@ -668,9 +668,7 @@
       }
     },
     "extra_packages": {
-      "yoga-http-api": {
-        "path": "../purescript-yoga-http-api"
-      },
+      "yoga-http-api": "0.3.0",
       "yoga-options": "0.1.0"
     }
   },
@@ -1549,8 +1547,9 @@
       ]
     },
     "yoga-http-api": {
-      "type": "local",
-      "path": "../purescript-yoga-http-api",
+      "type": "registry",
+      "version": "0.3.0",
+      "integrity": "sha256-cv4dQGgM6SQWXQmZFXMmjkFdddCPBzBP7NnNuov3iaI=",
       "dependencies": [
         "aff",
         "arrays",
