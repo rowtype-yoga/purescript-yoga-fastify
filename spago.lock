@@ -60,7 +60,7 @@
               "variant": ">=8.0.0 <9.0.0"
             },
             {
-              "yoga-http-api": ">=0.1.4 <0.2.0"
+              "yoga-http-api": ">=0.3.0 <0.4.0"
             },
             {
               "yoga-json": ">=5.1.0 <6.0.0"
@@ -668,7 +668,9 @@
       }
     },
     "extra_packages": {
-      "yoga-http-api": "0.1.4",
+      "yoga-http-api": {
+        "path": "../purescript-yoga-http-api"
+      },
       "yoga-options": "0.1.0"
     }
   },
@@ -1547,9 +1549,8 @@
       ]
     },
     "yoga-http-api": {
-      "type": "registry",
-      "version": "0.1.4",
-      "integrity": "sha256-kFnDMt0KGsi+84RKgmLQEr9HB+XHOgCeLMsFatCeCiY=",
+      "type": "local",
+      "path": "../purescript-yoga-http-api",
       "dependencies": [
         "aff",
         "arrays",

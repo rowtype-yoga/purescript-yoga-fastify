@@ -8,6 +8,7 @@ module Yoga.Fastify.Route.HandleResponse
 import Prelude
 
 import Data.Symbol (class IsSymbol)
+import Data.Unit (Unit, unit)
 import Data.Variant (Variant)
 import Data.Variant as Variant
 import Effect.Aff (Aff)
@@ -37,7 +38,31 @@ class HandleResponseRL (rl :: RowList Type) (respVariant :: Row Type) | rl -> re
 instance HandleResponseRL RL.Nil () where
   handleResponseRL _ = Variant.case_
 
+-- Unit body: set status + headers, send empty
 instance
+  ( IsSymbol label
+  , StatusCodeMap label
+  , SetHeaders headers
+  , HandleResponseRL tail rest
+  , Cons label (Response headers Unit) rest respVariant
+  , Lacks label rest
+  ) =>
+  HandleResponseRL (RL.Cons label (Response headers Unit) tail) respVariant where
+  handleResponseRL _ variant reply =
+    Variant.on (Proxy :: Proxy label) handler rest variant
+    where
+    handler :: Response headers Unit -> Aff Unit
+    handler (Response rd) = do
+      let statusCode = statusCodeFor (Proxy :: Proxy label)
+      void $ liftEffect $ F.status (unsafeCoerce statusCode) reply
+      void $ liftEffect $ setHeaders rd.headers reply
+      F.send (unsafeToForeign unit) reply
+
+    rest :: Variant rest -> Aff Unit
+    rest v = handleResponseRL (Proxy :: Proxy tail) v reply
+
+-- Non-Unit body: encode and send
+else instance
   ( IsSymbol label
   , StatusCodeMap label
   , SetHeaders headers
