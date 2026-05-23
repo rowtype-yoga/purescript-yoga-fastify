@@ -9,7 +9,7 @@ import Prelude
 
 import Data.Newtype (class Newtype)
 import Effect.Aff (Aff)
-import Effect.Uncurried (EffectFn1, EffectFn2, runEffectFn1, runEffectFn2)
+import Effect.Uncurried (EffectFn2, runEffectFn2)
 import Prim.Row (class Union)
 import Promise (Promise)
 import Promise.Aff as Promise
@@ -40,9 +40,3 @@ verifyPassword :: HashedPassword -> String -> Aff Boolean
 verifyPassword (HashedPassword hash) password =
   runEffectFn2 verifyImpl hash password # Promise.toAffE
 
-foreign import hashDefaultImpl :: EffectFn1 String (Promise String)
-
-hashPasswordDefault :: String -> Aff HashedPassword
-hashPasswordDefault password = do
-  let hash = runEffectFn1 hashDefaultImpl password
-  HashedPassword <$> Promise.toAffE hash

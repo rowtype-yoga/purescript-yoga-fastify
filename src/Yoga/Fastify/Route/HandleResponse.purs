@@ -8,7 +8,6 @@ module Yoga.Fastify.Route.HandleResponse
 import Prelude
 
 import Data.Symbol (class IsSymbol)
-import Data.Unit (Unit, unit)
 import Data.Variant (Variant)
 import Data.Variant as Variant
 import Effect.Aff (Aff)
