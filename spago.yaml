@@ -2,7 +2,7 @@ workspace: {}
 package:
   name: yoga-fastify
   publish:
-    version: 0.5.1
+    version: 0.5.2
     license: MIT
     location:
       githubOwner: rowtype-yoga
