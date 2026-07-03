@@ -47,8 +47,32 @@ class ParseHeadersRL (rl :: RowList Type) (headers :: Row Type) | rl -> headers 
 instance ParseHeadersRL RL.Nil () where
   parseHeadersRL _ _ = Right {}
 
--- Required header (non-Maybe type)
 instance
+  ( IsSymbol name
+  , HeaderValue ty
+  , ParseHeadersRL tail tailRow
+  , Row.Cons name (Maybe ty) tailRow headers
+  , Row.Lacks name tailRow
+  ) =>
+  ParseHeadersRL (RL.Cons name (Maybe ty) tail) headers where
+  parseHeadersRL _ obj = do
+    let headerName = reflectSymbol (Proxy :: Proxy name)
+    let headerResult = optionalHeaderResult headerName obj
+    let restResult = parseHeadersRL (Proxy :: Proxy tail) obj
+    case headerResult, restResult of
+      Right header, Right rest -> Right $ Record.insert (Proxy :: Proxy name) header rest
+      Left errs1, Left errs2 -> Left $ errs1 <> errs2
+      Left errs, Right _ -> Left errs
+      Right _, Left errs -> Left errs
+    where
+    optionalHeaderResult headerName headerObject =
+      case FObject.lookup headerName headerObject of
+        Nothing -> Right Nothing
+        Just headerValue -> case parseHeader headerValue of
+          Left _ -> Right Nothing
+          Right parsed -> Right $ Just parsed
+
+else instance
   ( IsSymbol name
   , HeaderValue ty
   , ParseHeadersRL tail tailRow
@@ -56,23 +80,19 @@ instance
   , Row.Lacks name tailRow
   ) =>
   ParseHeadersRL (RL.Cons name ty tail) headers where
-  parseHeadersRL _ obj =
-    let
-      headerName = reflectSymbol (Proxy :: Proxy name)
-
-      -- Try to parse this header
-      headerResult = case FObject.lookup headerName obj of
+  parseHeadersRL _ obj = do
+    let headerName = reflectSymbol (Proxy :: Proxy name)
+    let headerResult = requiredHeaderResult headerName obj
+    let restResult = parseHeadersRL (Proxy :: Proxy tail) obj
+    case headerResult, restResult of
+      Right header, Right rest -> Right $ Record.insert (Proxy :: Proxy name) header rest
+      Left errs1, Left errs2 -> Left $ errs1 <> errs2
+      Left errs, Right _ -> Left errs
+      Right _, Left errs -> Left errs
+    where
+    requiredHeaderResult headerName headerObject =
+      case FObject.lookup headerName headerObject of
         Nothing -> Left $ NEA.singleton $ MissingHeader headerName
         Just headerValue -> case parseHeader headerValue of
           Left err -> Left $ NEA.singleton $ InvalidHeaderValue headerName err
           Right parsed -> Right parsed
-
-      -- Parse the rest
-      restResult = parseHeadersRL (Proxy :: Proxy tail) obj
-    in
-      -- Accumulate errors from both
-      case headerResult, restResult of
-        Right header, Right rest -> Right $ Record.insert (Proxy :: Proxy name) header rest
-        Left errs1, Left errs2 -> Left $ errs1 <> errs2
-        Left errs, Right _ -> Left errs
-        Right _, Left errs -> Left errs

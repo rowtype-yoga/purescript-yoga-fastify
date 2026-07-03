@@ -2,21 +2,28 @@ module Test.Fastify.Main where
 
 import Prelude
 
+import Data.Array.NonEmpty as NEA
 import Data.Either (Either(..), isLeft)
+import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Effect.Class (liftEffect)
 import Foreign (unsafeToForeign)
+import Foreign.Object as Object
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual, shouldSatisfy)
 import Test.Spec.Reporter.Console (consoleReporter)
 import Test.Spec.Runner (runSpec)
+import Type.Proxy (Proxy(..))
 import Yoga.Fastify.Auth.Argon2 as Argon2
 import Yoga.Fastify.Auth.JWT as JWT
 import Yoga.Fastify.Fastify as Fastify
 import Yoga.Fastify.Plugin.Cors as Cors
 import Yoga.Fastify.Plugin.Helmet as Helmet
 import Yoga.Fastify.Plugin.RateLimit as RateLimit
+import Yoga.Fastify.Route.ParseHeaders (parseHeaders)
+import Yoga.HTTP.API.Route.Auth (BearerToken(..))
+import Yoga.HTTP.API.Route.HeaderError (HeaderError(..))
 
 spec :: Spec Unit
 spec = do
@@ -71,6 +78,20 @@ spec = do
           (\_ reply -> Fastify.send (unsafeToForeign "ok") reply)
           app
         Fastify.close app
+
+    describe "Header Parsing" do
+      it "allows Maybe headers to be absent" do
+        let result = parseHeaders (Proxy :: Proxy (authorization :: Maybe BearerToken)) Object.empty
+        result `shouldEqual` Right { authorization: Nothing }
+
+      it "parses Maybe headers when present" do
+        let headers = Object.singleton "authorization" "Bearer abc123"
+        let result = parseHeaders (Proxy :: Proxy (authorization :: Maybe BearerToken)) headers
+        result `shouldEqual` Right { authorization: Just (BearerToken "abc123") }
+
+      it "still requires non-Maybe headers" do
+        let result = parseHeaders (Proxy :: Proxy (authorization :: BearerToken)) Object.empty
+        result `shouldEqual` Left (NEA.singleton (MissingHeader "authorization"))
 
   describe "Yoga.Fastify.Plugin.Helmet" do
     it "registers helmet with defaults" do
