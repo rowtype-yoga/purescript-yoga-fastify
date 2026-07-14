@@ -10,7 +10,7 @@ import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Foreign (Foreign)
 import Type.Proxy (Proxy)
-import Yoga.HTTP.API.Route.Encoding (JSON, FormData, NoBody)
+import Yoga.HTTP.API.Route.Encoding (JSON, FormData, MultipartFormData, NoBody)
 import Yoga.JSON (class ReadForeign, read)
 
 class ParseBody (encoding :: Type) (body :: Type) | encoding -> body where
@@ -25,6 +25,11 @@ instance ReadForeign a => ParseBody (JSON a) a where
     Just foreignBody -> lmap show (read foreignBody)
 
 instance ReadForeign a => ParseBody (FormData a) a where
+  parseBody _ bodyMaybe = case bodyMaybe of
+    Nothing -> Left "Request body is required"
+    Just foreignBody -> lmap show (read foreignBody)
+
+instance ReadForeign a => ParseBody (MultipartFormData a) a where
   parseBody _ bodyMaybe = case bodyMaybe of
     Nothing -> Left "Request body is required"
     Just foreignBody -> lmap show (read foreignBody)

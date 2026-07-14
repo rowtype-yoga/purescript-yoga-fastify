@@ -20,9 +20,10 @@ import Yoga.HTTP.API.Path (class PathPattern, pathPattern)
 import Yoga.HTTP.API.Route.Route (Route, class ConvertResponseVariant)
 import Yoga.Fastify.Route.HandleResponse (class HandleResponse, handleResponse)
 import Yoga.HTTP.API.Route.Handler (Request, class DefaultRequestFields, class SegmentPathParams, class SegmentQueryParams, class EncodingBody)
-import Yoga.HTTP.API.Route.RouteHandler (Handler, class RouteHandler, runHandler)
+import Yoga.HTTP.API.Route.RouteHandler (Handler, class RouteHandler, runHandlerWithCookies)
 import Yoga.Fastify.Route.ParseBody (class ParseBody, parseBody)
 import Yoga.Fastify.Route.ParseHeaders (class ParseHeaders, parseHeaders)
+import Yoga.Fastify.Route.ParseCookies (class ParseCookies, parseCookies)
 import Yoga.Fastify.Route.ParsePathParams (class ParsePathParams, parsePathParams)
 import Yoga.Fastify.Route.ParseQueryParams (class ParseQueryParamsFromObject, parseQueryParamsFromObject)
 import Yoga.HTTP.API.Route.RenderMethod (class RenderMethod, renderMethod)
@@ -41,6 +42,7 @@ handleRoute
   => ParsePathParams pathParams
   => ParseQueryParamsFromObject queryParams
   => ParseHeaders fullHeaders
+  => ParseCookies fullCookies
   => ParseBody fullEncoding body
   => ConvertResponseVariant userResp respVariant
   => HandleResponse respVariant
@@ -61,12 +63,14 @@ handleRoute handler fastify =
     paramsObj <- liftEffect $ F.params req
     queryObj <- liftEffect $ F.query req
     headersObj <- liftEffect $ F.headers req
+    cookiesObj <- liftEffect $ F.cookies req
     bodyMaybe <- liftEffect $ F.body req
 
     let
       pathResult = parsePathParams (Proxy :: Proxy pathParams) paramsObj
       queryResult = parseQueryParamsFromObject (Proxy :: Proxy queryParams) queryObj
       headersResult = parseHeaders (Proxy :: Proxy fullHeaders) headersObj
+      cookiesResult = parseCookies (Proxy :: Proxy fullCookies) cookiesObj
       bodyResult = parseBody (Proxy :: Proxy fullEncoding) bodyMaybe
 
       tagField field err = { field, error: err }
@@ -75,16 +79,18 @@ handleRoute handler fastify =
         [ pathResult # blush # foldMap (map (tagField "path"))
         , queryResult # blush # foldMap (map (tagField "query"))
         , headersResult # blush # foldMap (NEA.toArray >>> map (show >>> tagField "headers"))
+        , cookiesResult # blush # foldMap (NEA.toArray >>> map (show >>> tagField "cookies"))
         , bodyResult # blush # foldMap (pure >>> map (tagField "body"))
         ]
 
     case NEA.fromArray collectErrors of
       Nothing ->
-        case pathResult, queryResult, headersResult, bodyResult of
-          Right path, Right query, Right headers, Right body -> do
-            result <- (runHandler handler) { path, query, headers, body }
+        case pathResult, queryResult, headersResult, cookiesResult, bodyResult of
+          Right path, Right query, Right headers, Right cookies, Right body -> do
+            result <- runHandlerWithCookies handler
+              { path, query, headers, cookies, body }
             handleResponse (Proxy :: Proxy respVariant) result reply
-          _, _, _, _ -> pure unit -- impossible
+          _, _, _, _, _ -> pure unit -- impossible
       Just errors ->
         send400 reply (writeJSON { error: "Invalid request", details: errors })
 

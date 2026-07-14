@@ -15,5 +15,9 @@ foreign import data FastifyPlugin :: Type
 
 foreign import registerImpl :: forall opts. EffectFn3 Fastify FastifyPlugin { | opts } (Promise Unit)
 
+-- | Queue a plugin registration.
+-- |
+-- | The returned `Aff` completes once Fastify accepts the registration. Use
+-- | `Yoga.Fastify.Fastify.ready` to wait for plugin effects and failures.
 register :: forall opts. FastifyPlugin -> { | opts } -> Fastify -> Aff Unit
 register plugin opts app = runEffectFn3 registerImpl app plugin opts # Promise.toAffE

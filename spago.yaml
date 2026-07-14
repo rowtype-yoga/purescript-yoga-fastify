@@ -2,7 +2,7 @@ workspace: {}
 package:
   name: yoga-fastify
   publish:
-    version: 0.5.2
+    version: 0.5.4
     license: MIT
     location:
       githubOwner: rowtype-yoga
@@ -26,7 +26,7 @@ package:
     - strings: ">=6.0.1 <7.0.0"
     - unsafe-coerce: ">=6.0.0 <7.0.0"
     - variant: ">=8.0.0 <9.0.0"
-    - yoga-http-api: ">=0.3.0 <0.4.0"
+    - yoga-http-api: ">=0.3.3 <0.4.0"
     - yoga-json: ">=5.2.1 <6.0.0"
   test:
     main: Test.Fastify.Main

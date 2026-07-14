@@ -1,3 +1,3 @@
-export const registerImpl = (app, plugin, opts) => {
-  return app.register(plugin, opts);
+export const registerImpl = async (app, plugin, opts) => {
+  await app.register(plugin, opts);
 };

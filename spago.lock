@@ -60,7 +60,7 @@
               "variant": ">=8.0.0 <9.0.0"
             },
             {
-              "yoga-http-api": ">=0.3.0 <0.4.0"
+              "yoga-http-api": ">=0.3.3 <0.4.0"
             },
             {
               "yoga-json": ">=5.2.1 <6.0.0"
@@ -109,6 +109,12 @@
         "lists",
         "prelude"
       ]
+    },
+    "arraybuffer-types": {
+      "type": "registry",
+      "version": "3.0.2",
+      "integrity": "sha256-p05cJnSkyeoB7VHzMyc2Eb1RwUaB7Nl0sQSqEGNEUD8=",
+      "dependencies": []
     },
     "arrays": {
       "type": "registry",
@@ -954,19 +960,25 @@
     },
     "yoga-http-api": {
       "type": "registry",
-      "version": "0.3.0",
-      "integrity": "sha256-cv4dQGgM6SQWXQmZFXMmjkFdddCPBzBP7NnNuov3iaI=",
+      "version": "0.3.3",
+      "integrity": "sha256-IkZG2RVKjXnNZjjhex678VU2pJ4bZWPAePZWrAVsIdE=",
       "dependencies": [
         "aff",
+        "arraybuffer-types",
         "arrays",
+        "effect",
         "either",
         "foldable-traversable",
         "foreign",
         "foreign-object",
         "identity",
         "integers",
+        "js-promise",
+        "js-promise-aff",
         "maybe",
         "newtype",
+        "nullable",
+        "numbers",
         "prelude",
         "record",
         "strings",

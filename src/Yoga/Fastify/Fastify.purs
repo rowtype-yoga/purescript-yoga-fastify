@@ -20,10 +20,23 @@ module Yoga.Fastify.Fastify
   , JsonSchema(..)
   , RouteSchema(..)
   , RouteConfig(..)
+  , RequestParsers
+  , CookieParser
+  , FormBodyParser
+  , MultipartParser
+  , MultipartLimits
   -- * Builders
   , ajvOptions
   , routeSchema
   , routeConfig
+  , requestParsers
+  , cookieParser
+  , disableCookieParser
+  , formBodyParser
+  , disableFormBodyParser
+  , multipartParser
+  , disableMultipartParser
+  , multipartLimits
   -- * Type Rows
   , ListenOptionsImpl
   , RouteOptionsImpl
@@ -31,6 +44,11 @@ module Yoga.Fastify.Fastify
   , AjvCustomOptionsImpl
   , RouteSchemaImpl
   , RouteConfigImpl
+  , RequestParsersImpl
+  , CookieParserOptionsImpl
+  , FormBodyParserOptionsImpl
+  , MultipartParserOptionsImpl
+  , MultipartLimitsImpl
   -- * Creation
   , fastify
   -- * Route Registration
@@ -41,6 +59,7 @@ module Yoga.Fastify.Fastify
   , delete
   , patch
   -- * Server Lifecycle
+  , ready
   , listen
   , close
   -- * Request API
@@ -48,6 +67,7 @@ module Yoga.Fastify.Fastify
   , params
   , query
   , headers
+  , cookies
   , method
   , url
   -- * Reply API
@@ -179,6 +199,97 @@ routeConfig opts = RouteConfig (unsafeCoerce opts)
 -- Fastify Creation
 --------------------------------------------------------------------------------
 
+type CookieParserOptionsImpl =
+  ( secret :: String
+  , algorithm :: String
+  , hook :: String
+  )
+
+newtype CookieParser = CookieParser Foreign
+
+cookieParser
+  :: forall opts opts_
+   . Union opts opts_ CookieParserOptionsImpl
+  => { | opts }
+  -> CookieParser
+cookieParser = CookieParser <<< unsafeToForeign
+
+disableCookieParser :: CookieParser
+disableCookieParser = CookieParser (unsafeToForeign false)
+
+type FormBodyParserOptionsImpl =
+  ( bodyLimit :: Int
+  )
+
+newtype FormBodyParser = FormBodyParser Foreign
+
+formBodyParser
+  :: forall opts opts_
+   . Union opts opts_ FormBodyParserOptionsImpl
+  => { | opts }
+  -> FormBodyParser
+formBodyParser = FormBodyParser <<< unsafeToForeign
+
+disableFormBodyParser :: FormBodyParser
+disableFormBodyParser = FormBodyParser (unsafeToForeign false)
+
+type MultipartLimitsImpl =
+  ( fieldNameSize :: Int
+  , fieldSize :: Int
+  , fields :: Int
+  , fileSize :: Int
+  , files :: Int
+  , headerPairs :: Int
+  , parts :: Int
+  )
+
+newtype MultipartLimits = MultipartLimits Foreign
+
+multipartLimits
+  :: forall opts opts_
+   . Union opts opts_ MultipartLimitsImpl
+  => { | opts }
+  -> MultipartLimits
+multipartLimits = MultipartLimits <<< unsafeToForeign
+
+type MultipartParserOptionsImpl =
+  ( limits :: MultipartLimits
+  , sharedSchemaId :: String
+  )
+
+newtype MultipartParser = MultipartParser Foreign
+
+multipartParser
+  :: forall opts opts_
+   . Union opts opts_ MultipartParserOptionsImpl
+  => { | opts }
+  -> MultipartParser
+multipartParser = MultipartParser <<< unsafeToForeign
+
+disableMultipartParser :: MultipartParser
+disableMultipartParser = MultipartParser (unsafeToForeign false)
+
+type RequestParsersImpl =
+  ( cookie :: CookieParser
+  , formBody :: FormBodyParser
+  , multipart :: MultipartParser
+  )
+
+newtype RequestParsers = RequestParsers Foreign
+
+-- | Configure or disable the request parsers installed by `fastify`.
+-- | Omitted entries retain the safe defaults, including multipart key-value bodies.
+requestParsers
+  :: forall opts opts_
+   . Union opts opts_ RequestParsersImpl
+  => { | opts }
+  -> RequestParsers
+requestParsers = RequestParsers <<< unsafeToForeign
+
+--------------------------------------------------------------------------------
+-- Fastify Creation
+--------------------------------------------------------------------------------
+
 type FastifyOptionsImpl =
   ( logger :: Boolean
   , disableRequestLogging :: Boolean
@@ -186,7 +297,9 @@ type FastifyOptionsImpl =
   , requestIdLogLabel :: String
   , bodyLimit :: Int
   , ajv :: AjvOptions
+  , requestParsers :: RequestParsers
   )
+
 
 type FastifyOptions = { | FastifyOptionsImpl }
 
@@ -252,6 +365,14 @@ type ListenOptionsImpl =
 
 type ListenOptions = { | ListenOptionsImpl }
 
+-- | Wait until all registered plugins have loaded.
+-- |
+-- | Calling `ready` more than once is safe.
+foreign import readyImpl :: EffectFn1 Fastify (Promise Unit)
+
+ready :: Fastify -> Aff Unit
+ready = runEffectFn1 readyImpl >>> Promise.toAffE
+
 -- | Start listening
 foreign import listenImpl :: forall opts. EffectFn2 Fastify { | opts } (Promise String)
 
@@ -291,6 +412,12 @@ foreign import headersImpl :: EffectFn1 FastifyRequest (Object String)
 
 headers :: FastifyRequest -> Effect (Object String)
 headers = runEffectFn1 headersImpl
+
+-- | Get cookies parsed from the request Cookie header.
+foreign import cookiesImpl :: EffectFn1 FastifyRequest (Object String)
+
+cookies :: FastifyRequest -> Effect (Object String)
+cookies = runEffectFn1 cookiesImpl
 
 -- | Get HTTP method
 foreign import methodImpl :: EffectFn1 FastifyRequest String
